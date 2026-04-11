@@ -187,13 +187,14 @@ Admin → Connections → Add Connection
 Use this configuration:
 
 Field	Value
-Conn Id	mysql_conn
-Conn Type	MySQL
-Host	localhost
-Schema	ecommerce_db
-Login	<your-username>
-Password	<your-password>
-Port	3306
+
+Conn Id:	mysql_conn
+Conn Type:	MySQL
+Host:	localhost
+Schema:	ecommerce_db
+Login:	<your-username>
+Password:	<your-password>
+Port:	3306
 
 ⚙️ 5. Add DAG to Airflow
 Copy DAG file into Airflow DAG folder:
