@@ -92,9 +92,13 @@ Containerization	Docker
 Pipeline tasks:
 
 1️. Create Star Schema tables
+
 2️. Extract Users from API
+
 3. Extract Products from API
+   
 4️. Transform into dimensions + facts
+
 5️. Load into MySQL
 
 The DAG is fully rerunnable and automatically truncates tables before loading.
@@ -107,29 +111,47 @@ The DAG is fully rerunnable and automatically truncates tables before loading.
 The Power BI dashboard answers key business questions:
 
 Revenue Performance
+
 Total Revenue KPI
+
 Revenue trend over time
+
 Monthly performance
+
 Product Analytics
+
 Revenue by category
+
 Top selling products
+
 Customer Insights
+
 Revenue by city
+
 Customer purchase distribution
+
 
 💡 Business Insights
 The dashboard enables stakeholders to answer questions such as:
 🛍️ Which product categories generate the most revenue?
+
 Identify high-performing product segments to prioritize marketing and inventory.
 
+
 🌍 Which cities contribute the most sales?
+
 Understand geographical demand patterns and target marketing campaigns.
 
+
 📈 How does revenue evolve over time?
+
 Track business growth and detect seasonal trends.
 
+
 🧑‍💻 Who are the most valuable customers?
+
 Identify high-value customers and analyze purchasing behavior.
+
 
 🖥️ Power BI Data Model
 The dashboard uses a Star Schema relationship model:
@@ -139,7 +161,9 @@ The dashboard uses a Star Schema relationship model:
 This model ensures:
 
 Fast filtering
+
 Accurate aggregations
+
 Scalable analytics
 
 🚀 How to Run This Project
@@ -189,12 +213,19 @@ Use this configuration:
 Field	Value
 
 Conn Id:	mysql_conn
+
 Conn Type:	MySQL
+
 Host:	localhost
+
 Schema:	ecommerce_db
+
 Login:	<your-username>
+
 Password:	<your-password>
+
 Port:	3306
+
 
 ⚙️ 5. Add DAG to Airflow
 Copy DAG file into Airflow DAG folder:
