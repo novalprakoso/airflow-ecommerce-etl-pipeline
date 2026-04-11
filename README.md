@@ -145,6 +145,7 @@ Scalable analytics
 🚀 How to Run This Project
 
 Follow the steps below to run the full ETL pipeline locally.
+
 🔐 1. Environment Setup & Secrets
 This project does not store credentials in the repository.
 Create your own environment configuration before running the pipeline.
