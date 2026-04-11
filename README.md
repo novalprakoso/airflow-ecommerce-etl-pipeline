@@ -1,5 +1,6 @@
 # airflow-ecommerce-etl-pipeline
 End-to-End Data Engineering Project: API → Airflow ETL → MySQL Data Warehouse → Power BI Dashboard
+
 <img width="1536" height="1024" alt="ETL pipeline for business intelligence" src="https://github.com/user-attachments/assets/5ee78116-646e-4844-947c-6617ddba5555" />
 
 
@@ -34,32 +35,31 @@ Fact Table
 
 fact_sales
 
-quantity
-total_price
-user_key
-product_key
+quantity,
+total_price,
+user_key,
+product_key,
 date_key
-Dimension Tables
 
 dim_users
 
-user_id
-username
-email
+user_id,
+username,
+email,
 city
 
 dim_products
 
-product_id
-title
-category
+product_id,
+title,
+category,
 price
 
 dim_date
 
-full_date
-day
-month
+full_date,
+day,
+month,
 year
 
 This schema enables fast analytical queries and BI reporting.
@@ -100,6 +100,8 @@ Pipeline tasks:
 The DAG is fully rerunnable and automatically truncates tables before loading.
 
 📊 Dashboard Overview
+
+
 <img width="551" height="298" alt="Dashboard E-Commerce FakeStore" src="https://github.com/user-attachments/assets/1d5c0412-bdbc-4c70-a1cf-edb55cfc8bb1" />
 
 The Power BI dashboard answers key business questions:
