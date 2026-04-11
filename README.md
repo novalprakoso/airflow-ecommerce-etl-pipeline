@@ -216,9 +216,9 @@ Host:	localhost
 
 Schema:	ecommerce_db
 
-Login:	<your-username>
+Login:	[your-username]
 
-Password:	<your-password>
+Password:	[your-password]
 
 Port:	3306
 
@@ -261,4 +261,4 @@ Refresh data source
 👨‍💻 Author
 
 Noval Prakoso
-// Aspiring Data Engineer
+|| Aspiring Data Engineer
