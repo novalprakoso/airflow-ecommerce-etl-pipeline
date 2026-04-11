@@ -213,16 +213,19 @@ Transform data into star schema
 Load data into MySQL warehouse
 
 📊 7. Open Power BI Dashboard
+
 Export tables from MySQL → CSV
+
 Open Power BI file in /dashboard folder
 Refresh data source
 
 🎯 Future Improvements
-Integrate reliable production API
-Add incremental loading
-Add data quality checks
-Deploy Airflow to cloud environment
-Automate dashboard refresh
+
+1. Integrate reliable production API
+2. Add incremental loading
+3. Add data quality checks
+4. Deploy Airflow to cloud environment
+5. Automate dashboard refresh
 
 
 👨‍💻 Author
