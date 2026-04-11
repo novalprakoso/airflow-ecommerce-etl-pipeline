@@ -92,12 +92,17 @@ Containerization	Docker
 Pipeline tasks:
 
 1️. Create Star Schema tables
+
 2️. Extract Users from API
+
 3. Extract Products from API
+
 4️. Transform into dimensions + facts
+
 5️. Load into MySQL
 
 The DAG is fully rerunnable and automatically truncates tables before loading.
+
 
 📊 Dashboard Overview
 
