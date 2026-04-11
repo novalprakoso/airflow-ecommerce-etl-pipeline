@@ -91,11 +91,11 @@ Containerization	Docker
 
 Pipeline tasks:
 
-1️⃣ Create Star Schema tables
-2️⃣ Extract Users from API
-3️⃣ Extract Products from API
-4️⃣ Transform into dimensions + facts
-5️⃣ Load into MySQL
+1️. Create Star Schema tables
+2️. Extract Users from API
+3. Extract Products from API
+4️. Transform into dimensions + facts
+5️. Load into MySQL
 
 The DAG is fully rerunnable and automatically truncates tables before loading.
 
@@ -148,6 +148,7 @@ Follow the steps below to run the full ETL pipeline locally.
 
 🔐 1. Environment Setup & Secrets
 This project does not store credentials in the repository.
+
 Create your own environment configuration before running the pipeline.
 
 Create .env file
