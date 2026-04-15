@@ -267,4 +267,4 @@ Refresh data source
 👨‍💻 Author
 
 Noval Prakoso
-|| Aspiring Data Engineer
+Electrical Engineering Graduate || Aspiring Data Engineer
