@@ -158,7 +158,8 @@ Identify high-value customers and analyze purchasing behavior.
 🖥️ Power BI Data Model
 The dashboard uses a Star Schema relationship model:
 
-<img width="677" height="251" alt="image" src="https://github.com/user-attachments/assets/c5e07ac3-4669-4f84-af07-1d0230636527" />
+<img width="1098" height="594" alt="image" src="https://github.com/user-attachments/assets/52ebd654-665f-480e-b970-07db417affc8" />
+
 
 This model ensures:
 
