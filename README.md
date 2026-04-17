@@ -108,7 +108,8 @@ The DAG is fully rerunnable and automatically truncates tables before loading.
 📊 Dashboard Overview
 
 
-<img width="551" height="298" alt="Dashboard E-Commerce FakeStore" src="https://github.com/user-attachments/assets/1d5c0412-bdbc-4c70-a1cf-edb55cfc8bb1" />
+<img width="1098" height="594" alt="Screenshot 2026-04-17 065731" src="https://github.com/user-attachments/assets/2437a39d-95d6-479b-849e-2fafdcc0be56" />
+
 
 The Power BI dashboard answers key business questions:
 
