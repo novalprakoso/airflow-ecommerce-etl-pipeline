@@ -1,317 +1,742 @@
-<<<<<<< HEAD
-# airflow-ecommerce-etl-pipeline
-End-to-End Data Engineering Project: API → Airflow ETL → MySQL Data Warehouse → Power BI Dashboard
+# FakeStore E-Commerce ETL Pipeline
+
+**End-to-End Data Engineering & Business Analytics Project**
+
+**FakeStore API → Apache Airflow → MySQL Star Schema → SQL Business Analysis → Power BI**
 
 <img width="1536" height="1024" alt="ETL pipeline for business intelligence" src="https://github.com/user-attachments/assets/5ee78116-646e-4844-947c-6617ddba5555" />
 
+## 📌 Project Overview
 
-This project demonstrates how to build a production-style ETL pipeline that extracts data from an E-Commerce API, transforms it into a Star Schema Data Warehouse, and delivers business insights through a BI dashboard.
+This project demonstrates an end-to-end **ETL pipeline for E-Commerce analytics**, starting from data extraction through business analysis and visualization.
 
-📌 Project Overview
+The pipeline extracts data from the **FakeStore API**, validates and transforms the raw JSON data into a **Star Schema data warehouse**, and loads the resulting datasets into MySQL using Apache Airflow.
 
-This project simulates a real-world Data Engineering workflow:
+The resulting warehouse is then used for:
 
-Extract data from public E-Commerce API
-Transform raw JSON into Star Schema Data Warehouse
-Load data into MySQL using Apache Airflow
-Export data for analytics
-Build interactive Power BI dashboard
+* SQL-based business analysis
+* Business KPI calculation
+* Customer and product analysis
+* Power BI visualization
 
-The goal is to showcase end-to-end data engineering skills including orchestration, data modeling, and data visualization.
+The project was developed to demonstrate practical skills in **Data Engineering, Data Analytics, and Business Analysis**.
 
-🏗️ Data Architecture
-🔹 ETL Pipeline
+---
 
-The pipeline extracts raw data from the FakeStore API, transforms it, and loads it into a MySQL Data Warehouse using Apache Airflow.
+## 🏗️ Data Architecture
 
-Pipeline flow:
+```text
+                    FakeStore API
+                         │
+                         ▼
+                ┌─────────────────┐
+                │     EXTRACT     │
+                │                 │
+                │ Users           │
+                │ Products        │
+                │ Carts           │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │    TRANSFORM    │
+                │                 │
+                │ Validation      │
+                │ Business Keys   │
+                │ Date Dimension  │
+                │ Sales Amount    │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │      LOAD       │
+                │      MySQL      │
+                │                 │
+                │ dim_users       │
+                │ dim_products    │
+                │ dim_date        │
+                │ fact_sales      │
+                └────────┬────────┘
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+      SQL Business Analysis     Power BI
+```
 
-API → Airflow DAG → Transform → MySQL Star Schema → Power BI Dashboard
+---
 
-⭐ Star Schema Design
+# 🔄 ETL Pipeline
 
-The warehouse uses a dimensional model optimized for analytics.
+The ETL pipeline is orchestrated using **Apache Airflow**.
 
-Fact Table
+### DAG Workflow
 
-fact_sales
+```text
+START
+  │
+  ▼
+Create Star Schema
+  │
+  ├──────────────┐
+  ▼              ▼
+Extract Users  Extract Products
+  │              │
+  └──────┬───────┘
+         │
+         ▼
+    Extract Carts
+         │
+         ▼
+   Transform Data
+         │
+         ▼
+    Load to MySQL
+         │
+         ▼
+        END
+```
 
-quantity,
-total_price,
-user_key,
-product_key,
-date_key
+### Airflow Tasks
 
-dim_users
+| Task                 | Description                               |
+| -------------------- | ----------------------------------------- |
+| `start`              | Starts the DAG workflow                   |
+| `create_star_schema` | Creates MySQL dimensional tables          |
+| `extract_users`      | Extracts customer data from FakeStore API |
+| `extract_products`   | Extracts product master data              |
+| `extract_carts`      | Extracts cart transaction data            |
+| `transform_data`     | Validates and transforms API data         |
+| `load_to_mysql`      | Loads dimensions and fact data into MySQL |
+| `end`                | Completes the pipeline                    |
 
-user_id,
-username,
-email,
+---
+
+# 📦 Source Data
+
+The project uses the **FakeStore API** as the source system.
+
+The successfully extracted dataset contains:
+
+| Dataset       | Records |
+| ------------- | ------: |
+| Users         |      10 |
+| Products      |      20 |
+| Carts         |       7 |
+| Product Lines |      14 |
+
+A cart can contain multiple products. Therefore, the grain of the fact table is:
+
+> **One row represents one product line within one cart transaction.**
+
+For example:
+
+```text
+Cart 1
+├── Product A → Quantity 4
+├── Product B → Quantity 1
+└── Product C → Quantity 6
+```
+
+This produces **3 fact rows** for Cart 1.
+
+---
+
+# 🗃️ Data Warehouse
+
+The transformed data is stored in MySQL using a **Star Schema**.
+
+## Fact Table
+
+### `fact_sales`
+
+| Column         | Description                   |
+| -------------- | ----------------------------- |
+| `sales_key`    | Surrogate key                 |
+| `cart_id`      | Business key of the cart      |
+| `user_key`     | Foreign key to `dim_users`    |
+| `product_key`  | Foreign key to `dim_products` |
+| `date_key`     | Foreign key to `dim_date`     |
+| `quantity`     | Quantity purchased            |
+| `sales_amount` | Calculated sales value        |
+
+### Grain
+
+```text
+1 row = 1 product line within 1 cart
+```
+
+---
+
+## Dimension Tables
+
+### `dim_users`
+
+Contains customer information:
+
+```text
+user_key
+user_id
+email
+username
 city
+```
 
-dim_products
+### `dim_products`
 
-product_id,
-title,
-category,
+Contains product master information:
+
+```text
+product_key
+product_id
+title
+category
 price
+```
 
-dim_date
+### `dim_date`
 
-full_date,
-day,
-month,
+Contains calendar attributes:
+
+```text
+date_key
+full_date
+day
+month
 year
+```
 
-This schema enables fast analytical queries and BI reporting.
+The current dataset generates **62 calendar dates** covering the minimum and maximum transaction dates.
 
-⚠️ Data Limitation
+---
 
-The FakeStore API provides a very small dataset:
+# 🔑 Data Modeling
 
-Table	Rows
-Users	10
-Products	20
+The warehouse uses **surrogate keys** for dimensional relationships while preserving API IDs as business keys.
 
-To simulate real analytics scenarios, synthetic sales transactions were generated.
+```text
+                 dim_users
+                    │
+                    │ user_key
+                    ▼
+               fact_sales
+              ▲    ▲    ▲
+              │    │    │
+       product_key │ date_key
+              │    │    │
+              │    │    │
+      dim_products  │ dim_date
+```
 
-During development, an attempt was made to scale the dataset to ~1200 transactions using retry logic and alternative API mirrors. However, the FakeStore API frequently returned SSL and HTTP 526 errors and became unavailable during development.
+This design separates:
 
-Because of this limitation, the project currently uses the stable dataset that was successfully extracted earlier.
-Future improvement would include integrating a more reliable API or data source.
+* Customer attributes
+* Product attributes
+* Calendar attributes
+* Transaction measures
 
-⚙️ Tech Stack
-Layer	Tools
-Orchestration	Apache Airflow (Astronomer)
-Database	MySQL
-Language	Python
-Data Modeling	Star Schema
-Visualization	Power BI
-Containerization	Docker
-🔄 Airflow DAG Workflow
+and allows analytical queries to aggregate sales across different business dimensions.
 
-Pipeline tasks:
+---
 
-1️. Create Star Schema tables
+# 🛡️ Data Quality & Validation
 
-2️. Extract Users from API
+The transformation layer includes several validation checks before data reaches the warehouse.
 
-3. Extract Products from API
+### User validation
 
-4️. Transform into dimensions + facts
+The pipeline checks that:
 
-5️. Load into MySQL
+* User dataset is not empty
+* User IDs are not NULL
+* Cart transactions reference existing users
 
-The DAG is fully rerunnable and automatically truncates tables before loading.
+### Product validation
 
+The pipeline checks that:
 
-📊 Dashboard Overview
+* Product dataset is not empty
+* Product IDs are not NULL
+* Product prices are not NULL
+* Cart transactions reference existing products
 
+### Transaction validation
+
+The pipeline checks that:
+
+* Cart dataset is not empty
+* Product quantities are greater than zero
+* Product references are valid
+* Transaction dates can be converted into valid dates
+
+Invalid records cause the transformation task to fail rather than silently loading inconsistent data.
+
+---
+
+# ♻️ Idempotency
+
+The pipeline was designed to be **rerunnable without creating duplicate business records**.
+
+The `fact_sales` table uses:
+
+```text
+UNIQUE(cart_id, product_key)
+```
+
+and the load process uses:
+
+```sql
+ON DUPLICATE KEY UPDATE
+```
+
+for fact records.
+
+Dimension tables also use duplicate-safe loading logic.
+
+This allows the DAG to be executed repeatedly while maintaining the expected warehouse state.
+
+---
+
+# 📊 Monitoring & Logging
+
+The pipeline includes operational logging during the load process.
+
+Examples include:
+
+```text
+dim_users loaded: X records
+dim_products loaded: X records
+dim_date loaded: X records
+fact_sales loaded: X records
+```
+
+A load summary is also logged after the warehouse loading process.
+
+This provides basic observability into:
+
+* Number of records processed
+* Successful loading of each table
+* Pipeline execution status
+* Failed database operations
+
+---
+
+# 📈 SQL Business Analysis
+
+After the ETL process completes, SQL queries are used to analyze the resulting warehouse.
+
+Business analysis is available in:
+
+```text
+dags/business_analysis.sql
+```
+
+The analysis covers:
+
+### 1. Sales by Category
+
+Measures:
+
+* Total quantity
+* Total sales
+
+### 2. Top Products
+
+Measures:
+
+* Total quantity sold
+* Total sales by product
+
+### 3. Sales by Customer
+
+Measures:
+
+* Number of orders
+* Total quantity
+* Total sales
+
+### 4. Sales by Date
+
+Measures:
+
+* Total quantity
+* Total sales by transaction date
+
+---
+
+# 💡 Key Business Insights
+
+Based on the current dataset:
+
+## Sales Performance
+
+Total sales:
+
+```text
+Rp4,691.27
+```
+
+Total product-line transactions:
+
+```text
+14
+```
+
+Total quantity sold:
+
+```text
+42
+```
+
+---
+
+## 🥇 Sales by Category
+
+| Category         | Quantity |      Sales |
+| ---------------- | -------: | ---------: |
+| Men's clothing   |       31 | Rp2,646.44 |
+| Jewelery         |        4 | Rp1,410.98 |
+| Electronics      |        6 |   Rp624.00 |
+| Women's clothing |        1 |     Rp9.85 |
+
+**Men's clothing generates the highest sales**, contributing approximately 56% of total sales.
+
+Jewelry ranks second in sales despite having a much lower quantity because of its higher-value products.
+
+---
+
+## 🏆 Top Products
+
+The highest-selling product is:
+
+**Fjallraven - Foldsack No. 1 Backpack**
+
+```text
+Quantity: 20
+Sales: Rp2,199.00
+```
+
+The product alone contributes almost half of total sales.
+
+This indicates that product-level sales concentration is relatively high in the current dataset.
+
+---
+
+## 👤 Customer Analysis
+
+| Customer  | Orders | Quantity |      Sales |
+| --------- | -----: | -------: | ---------: |
+| johnd     |      2 |       27 | Rp3,376.74 |
+| donero    |      1 |        5 |   Rp560.00 |
+| kevinryan |      2 |        6 |   Rp460.78 |
+| mor_2314  |      1 |        3 |   Rp283.90 |
+| hopkins   |      1 |        1 |     Rp9.85 |
+
+`johnd` is the highest-value customer with:
+
+```text
+2 orders
+27 units
+Rp3,376.74 sales
+```
+
+This customer contributes approximately 72% of total sales in the current dataset.
+
+---
+
+## 📅 Sales by Date
+
+| Date     | Quantity |      Sales |
+| -------- | -------: | ---------: |
+| 1/1/2020 |        4 |   Rp439.80 |
+| 1/2/2020 |       16 | Rp2,578.70 |
+| 3/1/2020 |       11 |   Rp874.73 |
+| 3/2/2020 |       11 |   Rp798.04 |
+
+The highest sales date is:
+
+**January 2, 2020 — Rp2,578.70**
+
+---
+
+# 📊 Power BI Dashboard
+
+The existing Power BI dashboard is retained as the visualization layer.
 
 <img width="551" height="298" alt="Dashboard E-Commerce FakeStore" src="https://github.com/user-attachments/assets/1d5c0412-bdbc-4c70-a1cf-edb55cfc8bb1" />
 
-The Power BI dashboard answers key business questions:
+The dashboard provides analysis such as:
 
-Revenue Performance
+* Revenue performance
+* Sales by category
+* Top products
+* Customer analysis
+* Sales trends
+* Geographic/customer analysis
 
-Total Revenue KPI
+The Power BI model follows a Star Schema approach.
 
-Revenue trend over time
+<img width="677" height="251" alt="Power BI Data Model" src="https://github.com/user-attachments/assets/c5e07ac3-4669-4f84-af07-1d0230636527" />
 
-Monthly performance
+Power BI files included in the repository:
 
-Product Analytics
+```text
+Dashboard E-Commerce FakeStore.pbix
+Dashboard E-Commerce FakeStore.pbit
+```
 
-Revenue by category
+---
 
-Top selling products
+# 🛠️ Technology Stack
 
-Customer Insights
+| Layer             | Technology     |
+| ----------------- | -------------- |
+| Source            | FakeStore API  |
+| Programming       | Python         |
+| Orchestration     | Apache Airflow |
+| Containerization  | Docker         |
+| Data Warehouse    | MySQL          |
+| Data Modeling     | Star Schema    |
+| Business Analysis | SQL            |
+| Visualization     | Power BI       |
+| Version Control   | Git & GitHub   |
 
-Revenue by city
+---
 
-Customer purchase distribution
+# 📁 Project Structure
 
+```text
+airflow-ecommerce-etl-pipeline/
+│
+├── dags/
+│   ├── etl_fakestore_api.py
+│   └── business_analysis.sql
+│
+├── Dashboard E-Commerce FakeStore.pbix
+├── Dashboard E-Commerce FakeStore.pbit
+│
+├── RAW Data Postman.png
+├── Raw Data.png
+├── Tampilan Airflow UI refactor v2.png
+│
+├── docker-compose.yml
+├── .gitignore
+└── README.md
+```
 
-💡 Business Insights
-The dashboard enables stakeholders to answer questions such as:
-🛍️ Which product categories generate the most revenue?
+---
 
-Identify high-performing product segments to prioritize marketing and inventory.
+# 🚀 How to Run
 
+## 1. Clone the repository
 
-🌍 Which cities contribute the most sales?
+```bash
+git clone https://github.com/novalprakoso/airflow-ecommerce-etl-pipeline.git
+cd airflow-ecommerce-etl-pipeline
+```
 
-Understand geographical demand patterns and target marketing campaigns.
+For the current V2 implementation:
 
+```bash
+git checkout refactor-v2
+```
 
-📈 How does revenue evolve over time?
+---
 
-Track business growth and detect seasonal trends.
+## 2. Configure environment variables
 
+Create a local `.env` file in the project root.
 
-🧑‍💻 Who are the most valuable customers?
+Example:
 
-Identify high-value customers and analyze purchasing behavior.
+```env
+AIRFLOW_SECRET_KEY=airflow_secret_local
+POSTGRES_PASSWORD=postgres_local
+AIRFLOW_ADMIN_PASSWORD=admin_local
+```
 
+The `.env` file is intentionally excluded from Git through `.gitignore`.
 
-🖥️ Power BI Data Model
-The dashboard uses a Star Schema relationship model:
+---
 
-<img width="677" height="251" alt="image" src="https://github.com/user-attachments/assets/c5e07ac3-4669-4f84-af07-1d0230636527" />
+## 3. Start Docker services
 
-This model ensures:
+Run:
 
-Fast filtering
+```bash
+docker compose up -d
+```
 
-Accurate aggregations
+Check running containers:
 
-Scalable analytics
+```bash
+docker compose ps
+```
 
-🚀 How to Run This Project
+---
 
-Follow the steps below to run the full ETL pipeline locally.
+## 4. Open Airflow
 
-🔐 1. Environment Setup & Secrets
-This project does not store credentials in the repository.
+Open:
 
-Create your own environment configuration before running the pipeline.
-
-Create .env file
-
-Create a file in the project root:
-
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_DB=ecommerce_db
-MYSQL_USER=your_username
-MYSQL_PASSWORD=your_password
-
-Add .env to .gitignore:
-
-.env
-
-🗄️ 2. Create MySQL Database
-Open MySQL and create a new database:
-
-CREATE DATABASE ecommerce_db;
-
-🌬️ 3. Start Apache Airflow
-Run Airflow locally:
-
-airflow standalone
-
-Open Airflow UI:
-
+```text
 http://localhost:8080
+```
 
-🔗 4. Create Airflow MySQL Connection
-Inside Airflow UI:
+Log in using the local Airflow credentials configured through `.env`.
 
-Admin → Connections → Add Connection
+---
 
-Use this configuration:
+## 5. Configure MySQL Connection
 
-Field	Value
+Create an Airflow connection with:
 
-Conn Id:	mysql_conn
+| Field     | Value                 |
+| --------- | --------------------- |
+| Conn ID   | `mysql_conn`          |
+| Conn Type | `MySQL`               |
+| Host      | Your local MySQL host |
+| Schema    | `fakestore_api`       |
+| Login     | Your MySQL username   |
+| Password  | Your MySQL password   |
+| Port      | `3306`                |
 
-Conn Type:	MySQL
+The DAG accesses this connection using:
 
-Host:	localhost
+```python
+MySqlHook(mysql_conn_id="mysql_conn")
+```
 
-Schema:	ecommerce_db
+---
 
-Login:	[your-username]
+## 6. Run the DAG
 
-Password:	[your-password]
+From Airflow UI:
 
-Port:	3306
+```text
+etl_fakestore_api
+        ↓
+Trigger DAG
+```
 
+The expected workflow is:
 
-⚙️ 5. Add DAG to Airflow
-Copy DAG file into Airflow DAG folder:
+```text
+Create Star Schema
+        ↓
+Extract Users
+Extract Products
+Extract Carts
+        ↓
+Transform Data
+        ↓
+Load to MySQL
+        ↓
+Success
+```
 
-cp dags/fakestore_etl.py ~/airflow/dags/
+---
 
-Restart Airflow if needed.
+# 🔍 Validate the Warehouse
 
-▶️ 6. Run the Pipeline
-In Airflow UI:
+After the DAG completes, verify the warehouse using SQL:
 
-Turn ON the DAG
-Click Trigger DAG
+```sql
+SELECT COUNT(*) FROM dim_users;
 
-The pipeline will:
+SELECT COUNT(*) FROM dim_products;
 
-Extract data from FakeStore API
-Transform data into star schema
-Load data into MySQL warehouse
+SELECT COUNT(*) FROM dim_date;
 
-📊 7. Open Power BI Dashboard
+SELECT COUNT(*) FROM fact_sales;
+```
 
-Export tables from MySQL → CSV
+Expected current dataset:
 
-Open Power BI file in /dashboard folder
-Refresh data source
+```text
+dim_users     = 10
+dim_products  = 20
+dim_date      = 62
+fact_sales    = 14
+```
 
-🎯 Future Improvements
+Total sales can be checked with:
 
-1. Integrate reliable production API
-2. Add incremental loading
-3. Add data quality checks
-4. Deploy Airflow to cloud environment
-5. Automate dashboard refresh
+```sql
+SELECT
+    COUNT(*) AS total_product_lines,
+    SUM(quantity) AS total_quantity,
+    SUM(sales_amount) AS total_sales
+FROM fact_sales;
+```
 
+Expected result:
 
-👨‍💻 Author
+```text
+product lines : 14
+quantity      : 42
+total sales   : Rp4,691.27
+```
 
-Noval Prakoso
-|| Aspiring Data Engineer
-=======
-Overview
-========
+---
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+# ⚠️ Data Limitation
 
-Project Contents
-================
+FakeStore API is a demonstration API with a relatively small dataset.
 
-Your Astro project contains the following files and folders:
+The current successful extraction contains only:
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+```text
+10 users
+20 products
+7 carts
+14 product lines
+```
 
-Deploy Your Project Locally
-===========================
+Therefore, the business insights in this project should be interpreted as **demonstration analytics**, not as statistically representative E-Commerce performance.
 
-Start Airflow on your local machine by running 'astro dev start'.
+The purpose of the project is primarily to demonstrate:
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+* ETL pipeline design
+* Data orchestration
+* Data validation
+* Dimensional modeling
+* Idempotent loading
+* SQL analytics
+* BI integration
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+For a production implementation, the pipeline could be connected to a larger and more reliable transactional data source.
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+---
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+# 🚧 Future Improvements
 
-Deploy Your Project to Astronomer
-=================================
+Potential improvements include:
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+1. Incremental data loading
+2. Automated data quality reporting
+3. More comprehensive pipeline monitoring
+4. Historical dimension management
+5. Cloud deployment
+6. Automated Power BI dataset refresh
+7. Integration with a larger production-scale E-Commerce dataset
+8. CI/CD pipeline for Airflow DAG testing
 
-Contact
-=======
+---
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
->>>>>>> a147db4 (Initial commit — Airflow ETL FakeStore + Power BI Dashboard)
+# 👨‍💻 Author
+
+**Noval Prakoso**
+
+Aspiring Data Engineer | Data Analyst | Business Analyst
+
+Background in Electrical Engineering with hands-on experience in:
+
+* Python
+* SQL
+* MySQL
+* Apache Airflow
+* Docker
+* Power BI
+* Data Modeling
+* ETL Development
+* Business Analysis
